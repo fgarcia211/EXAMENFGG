@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <title>Ejercicio JQUERY</title>
+
+        <link rel="canonical" href="https://getbootstrap.com/docs/5.2/examples/album/">
+
+        <script src="js/jquery-3.6.1.min.js"></script>
+        <script type="text/javascript" src="/jsbts/bootstrap.bundle.min.js"></script>
+
+        <link href="/cssbts/bootstrap.min.css" rel="stylesheet">
+
+        <script>
+
+            //URL QUE USAREMOS PARA RECOGER INFORMACION DE LA API
+            const url = "https://apiseriespersonajes2022.azurewebsites.net"
+
+            //FUNCIONES QUE SE EJECUTARAN AL CARGAR LA PAGINA
+            $(document).ready(function(){
+                cargaMenu();
+                cargaHome();
+            })
+
+            //FUNCION PARA CARGAR EL MENU EN EL HTML DENTRO DEL DIV CON ID MENU
+            function cargaMenu(){
+                
+                $("#menu").html("");
+                $("#menu").load("menucrud.html");
+
+                //VER FUNCTION CREASERIES() PARA MAS INFO
+                creaSeries();
+            }
+
+            //FUNCION PARA CARGAR LA HOME EN EL HTML DENTRO DEL DIV CON ID CONTENIDO
+            //(Se cargara al principio, y luego cuando accedamos al home de navbar)
+            function cargaHome(){
+                
+                $("#contenido").html("");
+                $("#contenido").load("home.html")
+
+            }
+
+            //FUNCION PARA CARGAR EL DROPDOWN DE SERIES PERTENECIENTE A MENUCRUD.HTML
+            function creaSeries(){
+
+                //HACEMOS UN AJAX, CON UN GET DE TODAS LAS SERIES
+                $.ajax({
+
+                    "url": url + "/api/Series" ,
+                    "method" : "GET" ,
+                    "dataType" : "json" ,
+                    "success" : function(data){
+
+                        //AL RECOGER TODAS LAS SERIES CREAMOS UN LI, CON UN A DENTRO PARA CADA UNO
+                        $.each(data , function(indice, serie){
+                            
+                            //SELECCIONAMOS EL DROPDOWN DONDE METEREMOS LAS SERIES RECOGIDAS
+                            var dropdown = $(".dropdown-menu");
+
+                            var lista = $("<li>");
+                            
+                            //A CADA ENLACE LE ASIGNAMOS LA CLASE DE DROPDOWN ITEM Y ADEMAS LE DECIMOS QUE EL HREF CARGUE UNA FUNCION DE JAVASCRIPT
+                            //VER FUNCTION CARGASERIE(IDSER) PARA MAS INFO
+                            var opcion = $("<a>",{"class":"dropdown-item","href":"javascript:cargaSerie('"+serie.idSerie+"')"})
+                            opcion.text(serie.nombre);
+                            
+                            //AÑADIMOS EL ENLACE A AL LI, Y POSTERIORMENTE, AÑADIMOS AL UL CON CLASE .DROPDOWN-MENU, EL LI CREADO
+                            $(lista).append(opcion);
+                            $(dropdown).append(lista);
+
+                        });
+
+                    }
+
+                });
+            }
+
+
+            //FUNCION PARA CARGAR MUESTRASERIE.HTML CON EL ID DE LA SERIE QUE LE PASEMOS
+            function cargaSerie(idser){
+
+                //VACIAMOS EL CONTENIDO PARA POSTERIORMENTE, AÑADIR EL MUESTRASERIE.HTML
+                $("#contenido").html("");
+                $("#contenido").load("muestraserie.html")
+
+                //UNA VEZ CARGADO EL MUESTRASERIE.HTML, HACEMOS LLAMADA DE AJAX CON UN GET DE LA SERIE CON EL IDSER
+                $.ajax({
+
+                    "url": url + "/api/Series/" + idser ,
+                    "method" : "GET" ,
+                    "dataType" : "json" ,
+                    "success" : function(data){
+
+                        //AÑADIMOS LA INFORMACION A LA CARD PERTENECIENTE A LA CLASE .CARTASERIE (VER MUESTRASERIE.HTML PARA MAS DETALLES)
+                        $(".cartaSerie img").attr("src",data.imagen)
+                        $(".cartaSerie .card-title").text(data.nombre);
+                        $(".cartaSerie .card-text").text("IMDB: "+data.puntuacion)
+                        $(".cartaSerie a").text("Personajes")
+
+                        //EN EL ENLACE/BOTON , LE ASIGNAMOS UN HREF QUE CARGUE UNA FUNCION DE JAVASCRIPT
+                        //VER FUNCTION CARGAPERSONAJES(IDSER) PARA MAS INFO
+                        $(".cartaSerie a").attr("href","javascript:cargaPersonajes('"+idser+"')")
+
+                    }
+
+                });
+
+            }
+
+            //FUNCION PARA CARGAR MUESTRAPERSONAJES.HTML SEGUN EL ID DE LA SERIE A LA QUE PERTENEZCAN
+            function cargaPersonajes(idser){
+                
+                //VACIAMOS EL CONTENIDO PARA POSTERIORMENTE, AÑADIR EL MUESTRAPERSONAJES.HTML
+                $("#contenido").html("");
+                $("#contenido").load("muestrapersonajes.html")
+                
+                //UNA VEZ CARGADO EL MUESTRAPERSONAJES.HTML, HACEMOS LLAMADA DE AJAX CON UN GET DE LOS PERSONAJES QUE PERTENEZCAN A LA SERIE CON ID IDSER
+                $.ajax({
+
+                    "url": url + "/api/Series/PersonajesSerie/" + idser ,
+                    "method" : "GET" ,
+                    "dataType" : "json" ,
+                    "success" : function(data){
+
+                        //AL BOTON DENTRO DE MUESTRAPERSONAJES.HTML LE INDICAMOS QUU EL HREF CARGARA UNA FUNCION JAVASCRIPT
+                        //VER FUNCTION CARGASERIE(IDSER) PARA MAS INFO
+                        $(".botonVueltaPersonajes").attr("href","javascript:cargaSerie('"+idser+"')")
+
+                        //POR CADA PERSONAJE CREAMOS UN TR Y LO AÑADIREMOS AL TBODY DE .TABLAPERSONAJES
+                        $.each(data , function(indice, personaje){
+                            
+                            var tbody = $(".tablaPersonajes tbody");
+
+                            var fila = $("<tr>");
+                            //CREAMOS UNA CELDA CON EL NOMBRE DE CADA PERSONAJE
+                            var celdaNom = $("<td>",{"text":personaje.nombre})
+                            var celdaIma = $("<td>");
+
+                           //CREAMOS UNA IMAGEN PARA AÑADIR AL TD DE CELDAIMA, CON EL SRC DEL PERSONAJE
+                            var imagen = $("<img>",{"src":personaje.imagen,"width":"150px","height":"150px"})
+                            $(celdaIma).append(imagen);
+
+                            //A LA FILA LE AÑADIMOS LOS 2 TD CREADOS, Y POSTERIORMENTE AÑADIMOS EL TR AL TBODY
+                            $(fila).append(celdaNom,celdaIma);
+
+                            $(tbody).append(fila);
+
+                        });
+
+                    }
+
+                });
+
+            }
+
+            function cargaNuevoPersonaje() {
+
+                //VACIAMOS EL CONTENIDO PARA POSTERIORMENTE, AÑADIR EL NUEVOPERSONAJE.HTML
+                $("#contenido").html("");
+                $("#contenido").load("nuevopersonaje.html")
+
+                //HACEMOS UNA LLAMADA AJAX PARA RELLENAR EL SELECT DEL FORMULARIO, QUE NOS MUESTRA LAS SERIES
+                $.ajax({
+
+                    "url": url + "/api/Series" ,
+                    "method" : "GET" ,
+                    "dataType" : "json" ,
+                    "success" : function(data){
+
+                        //POR CADA SERIE QUE HAYA, SE AÑADIRA AL .SELECTSERIEN UNA OPCION, QUE TENDRA COMO VALOR EL ID DE CADA SERIE, Y COMO TEXTO, EL NOMBRE DE LA SERIE
+                        $.each(data , function(indice, serie){
+                            
+                            var selector = $(".selectSerieN");
+
+                            var opcion = $("<option>",{"value":serie.idSerie,"text":serie.nombre});
+
+                            $(selector).append(opcion);
+
+                        });
+
+                    }
+
+                });
+
+            }
+
+            //FUNCION PARA ENVIAR EL FORMULARIO PERTENECIENTE A NUEVOPERSONAJE.HTML
+            function enviaFormN() {
+
+                //SI ENCONTRAMOS UN EVENTO, LO ANULAMOS PARA REALIZAR ESTA FUNCION
+                if (event){
+                    event.preventDefault();
+                }
+                
+                //CREAMOS EL PERSONAJE A ENVIAR Y LE PASAMOS COMO PROPIEDADES, LOS CAMPOS SOLICITADOS
+                //IDPERSONAJE: 1 (DA IGUAL EL ID), NOMBRE: EL VALOR DEL .INPUTNOMBREN , IMAGEN: EL VALOR DEL .INPUTIMAGENN , IDSERIE: EL VALOR DE SELECTSERIEN
+                //PARA NOMBRE Y IMAGEN (VER NUEVOPERSONAJE.HTML) PARA SELECT (VER FUNCTION CARGANUEVOPERSONAJE())
+                var personaje = new Object();
+
+
+                personaje.idPersonaje = 1;
+                personaje.nombre = $(".inputNombreN").val();
+                personaje.imagen = $(".inputImagenN").val();
+                personaje.idSerie = parseInt($(".selectSerieN").val());
+
+                //HACEMOS LLAMADA AJAX PARA HACER EL POST DEL PERSONAJE CREADO, Y UNA VEZ HECHO HACEMOS UN HREF A UNA FUNCION JAVASCRIPT
+                //VER CARGAPERSONAJES(IDSER) PARA MAS INFO
+                $.ajax({
+
+                    "url": url + "/api/Personajes" ,
+                    "method" : "POST" ,
+                    "data" : JSON.stringify(personaje),
+                    "contentType" : "application/json",
+
+                    "success" : function(respuesta){
+
+                        window.location.href = "javascript:cargaPersonajes('"+personaje.idSerie+"')";
+
+                    }
+
+                });
+
+            }
+
+            function cargaModificaPersonaje() {
+
+                //VACIAMOS EL CONTENIDO PARA POSTERIORMENTE, AÑADIR EL MODIFICAPERSONAJE.HTML
+                $("#contenido").html("");
+                $("#contenido").load("modificapersonaje.html")
+
+                //HACEMOS LLAMADA AJAX CON GET, PARA RELLENAR EL SELECT .SELECTSERIEM CON OPCIONES, QUE CONTENDRA LAS SERIES
+                $.ajax({
+
+                    "url": url + "/api/Series" ,
+                    "method" : "GET" ,
+                    "dataType" : "json" ,
+                    "success" : function(data){
+
+                        $.each(data , function(indice, serie){
+                            
+                            var selector = $(".selectSerieM");
+
+                            //SE LE ASIGNA COMO VALOR, EL ID DE LA SERIE, Y COMO TEXTO EL NOMBRE DE LA SERIE
+                            var opcion = $("<option>",{"value":serie.idSerie,"text":serie.nombre});
+
+                            $(selector).append(opcion);
+
+                        });
+
+                    }
+
+                });
+
+                //HACEMOS LLAMADA AJAX CON GET, PARA RELLENAR EL SELECT .SELECTPERSONAJEM CON OPCIONES, QUE CONTENDRA LOS PERSONAJES
+                $.ajax({
+
+                    "url": url + "/api/Personajes" ,
+                    "method" : "GET" ,
+                    "dataType" : "json" ,
+                    "success" : function(data){
+
+                        $.each(data , function(indice, personaje){
+                            
+                            var selector = $(".selectPersonajeM");
+
+                            //SE LE ASIGNA COMO VALOR, EL ID DEL PERSONAJE, Y COMO TEXTO EL NOMBRE DEL PERSONAJE
+                            var opcion = $("<option>",{"value":personaje.idPersonaje,"text":personaje.nombre});
+
+                            $(selector).append(opcion);
+
+                        });
+
+                    }
+
+                });
+
+            }
+            
+            //FUNCION PARA ENVIAR EL FORMULARIO PERTENECIENTE A MODIFICAPERSONAJE.HTML
+            function enviaFormM() {
+
+                //SI HAY EVENTO LO ANULAMOS PARA REALIZAR NUESTRA FUNCION
+                if (event){
+                    event.preventDefault();
+                }
+
+                //HACEMOS UN AJAX, CON UN PUT DONDE INCLUIMOS LA RUTA CON EL ID DEL PERSONAJE, Y EL ID DE LA SERIE
+                //SE HACE EN ESE ORDEN YA QUE VIENE DADO POR LA API, VER CONST URL
+                $.ajax({
+
+                    "url": url + "/api/Personajes/" + $(".selectPersonajeM").val() + "/" + $(".selectSerieM").val(),
+                    "method" : "PUT" ,
+
+                    "success" : function(respuesta){
+
+                        //UNA VEZ HECHO EL PUT, REALIZAMOS UN HREF A UNA FUNCION JAVASCRIPT
+                        //VER CARGAPERSONAJES(IDSER) PARA MAS INFO
+                        window.location.href = "javascript:cargaPersonajes('"+$(".selectSerieM").val()+"')";
+
+                    }
+
+                });
+
+            }
+
+            //FUNCION PARA CAMBIAR EL PERSONAJE MOSTRADO AL CAMBIAR EL SELECT DE MODIFICAPERSONAJE.HTML PERTENENCIENTE A PERSONAJES
+            function cambiaPersonaje() {
+
+                //VACIAMOS EL TEXTO DEL PARRAFO
+                $(".persosele p").text("");
+
+                //HACEMOS LLAMADA AJAX CON GET, PARA RELLENAR EL DIV QUE CONTIENE EL PERSONAJE
+                $.ajax({
+
+                    "url": url + "/api/Personajes/" + $(".selectPersonajeM").val(),
+                    "method" : "GET" ,
+                    "dataType" : "json" ,
+                    "success" : function(data){
+                            
+                        $(".persosele p").text(data.nombre);
+                        $(".persosele img").attr("src",data.imagen)
+
+                    }
+
+                });
+            }
+
+            //FUNCION PARA CAMBIAR LA SERIE MOSTRADA AL CAMBIAR EL SELECT DE MODIFICAPERSONAJE.HTML PERTENENCIENTE A SERIES
+            function cambiaSerie() {
+
+                //VACIAMOS EL TEXTO DEL PARRAFO
+                $(".seriesele p").text("");
+
+                //HACEMOS LLAMADA AJAX CON GET, PARA RELLENAR EL DIV QUE CONTIENE LA SERIE
+                $.ajax({
+
+                    "url": url + "/api/Series/" + $(".selectSerieM").val(),
+                    "method" : "GET" ,
+                    "dataType" : "json" ,
+                    "success" : function(data){
+                            
+                        $(".seriesele p").text(data.nombre);
+                        $(".seriesele img").attr("src",data.imagen)
+
+                    }
+
+                });
+
+            }
+
+        </script>
+
+    </head>
+    <body>
+        <!--Divisor menu que solo se cargara al principio para mostrar menucrud.html-->
+        <div id="menu"></div>
+        <!--Divisor contenido en el que iremos modificando el contenido a mostrar dentro de los demas html (exceptuando menucrud.html)-->
+        <div id="contenido"></div>
+    </body>
+</html>

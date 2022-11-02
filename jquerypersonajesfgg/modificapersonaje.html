@@ -1,0 +1,28 @@
+<div>
+    <h2 style="color:blue;">Series y personajes</h2>
+    <form onsubmit="enviaFormM()">
+        <div class="mb-3 form-check">
+            <label class="form-label">Seleccione un personaje</label>
+            <select onchange="cambiaPersonaje()" class="form-select selectPersonajeM">
+                <!--Aqui lo generamos con JS-->
+            </select>
+        </div>
+        <div class="mb-3 form-check">
+            <label class="form-label">Seleccione una serie</label>
+            <select onchange="cambiaSerie()" class="form-select selectSerieM">
+                <!--Aqui lo generamos con JS-->
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Modificar personaje</button>
+        <br/>
+        <br/>
+        <div class="seriesele">
+            <img src="" width="150px" height="150px">
+            <p style="color: red"></p>
+        </div>
+        <div class="persosele">
+            <img src="" width="150px" height="150px">
+            <p style="color: blue"></p>
+        </div>
+    </form>
+</div>
